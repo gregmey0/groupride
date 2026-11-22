@@ -1,6 +1,6 @@
 {
   "name": "groupride",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Group Ride – sorties VTT en groupe : positions en direct, stats, tracés GPX, messagerie (web + Android)",
   "scripts": {

@@ -91,7 +91,7 @@ body.sim{--banner:28px}
 @media (prefers-reduced-motion:reduce){.rmk.sos span{animation:none}}
 .flag svg{display:block}
 .sosban{display:flex;flex-direction:column;gap:3px;padding:3px;background:#3a0000}
-.sosban button{min-height:44px;background:var(--bad);color:#000;border-color:var(--bad);font-size:.92rem;justify-content:flex-start;text-align:left}
+.sosban button{min-height:44px;background:var(--bad);color:#000;border-color:var(--bad);font-size:.92rem;display:block;text-align:left}
 .sosban #sosCancel{background:#000;color:var(--ok);border-color:var(--ok)}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;padding:.35rem;border-top:3px solid var(--acc);background:var(--bg);flex:none}
 .tabs button{min-height:58px;font-size:1.3rem;flex-direction:column;gap:0;padding:.15rem;border-radius:12px;position:relative;border-color:#444}
@@ -142,6 +142,7 @@ body.sim{--banner:28px}
 #sheet{position:fixed;inset:0;z-index:3500;background:var(--bg);overflow:auto;display:flex;flex-direction:column;padding:var(--sat) var(--sar) var(--sab) var(--sal)}
 #sheet[hidden]{display:none!important}
 #sheet header.bar button{min-height:46px}
+#sheetBody>div{display:flex;flex-direction:column;gap:.7rem}
 .menu{display:flex;flex-direction:column;gap:.5rem}
 .layers{display:flex;flex-direction:column;gap:.4rem}
 .layers button{min-height:50px;justify-content:flex-start}
@@ -157,6 +158,7 @@ body.sim{--banner:28px}
 /* aide */
 .help h2{margin-top:.6rem}
 .help li{margin:.3rem 0}
+a.btnlink{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:58px;border-radius:14px;background:var(--acc);color:#000;font-weight:700;text-decoration:none;margin-top:1.2rem;padding:.5rem 1rem;text-align:center}
 /* toast / modale */
 #toast{position:fixed;left:50%;bottom:calc(84px + var(--sab));transform:translateX(-50%) translateY(40px);opacity:0;pointer-events:none;background:var(--acc);color:#000;font-weight:700;padding:.7rem 1rem;border-radius:14px;z-index:3000;max-width:92vw;transition:transform .25s,opacity .25s;box-shadow:0 0 0 3px #000}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}

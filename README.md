@@ -11,6 +11,8 @@ Appli pour rouler en groupe : chacun voit la position des autres sur la carte, e
 - **Messagerie** de groupe, messages rapides, envoi de sa position, alerte « 🆘 Besoin d'aide ».
 - **Fin de sortie** : bilan et export de sa trace en GPX.
 
+📄 **[Manuel d'utilisation (PDF)](https://gregmey0.github.io/groupride/manuel-group-ride.pdf)**, avec des captures d'écran de chaque étape.
+
 ## Installer
 
 - **Android** : télécharger [GroupRide.apk](../../releases/latest/download/GroupRide.apk) depuis le téléphone, l'ouvrir et autoriser l'installation. Le partage continue téléphone verrouillé, et les messages arrivent en notification.
@@ -26,6 +28,7 @@ Les échanges passent par un relais MQTT public (HiveMQ, à défaut EMQX). Tout 
 - `python3 build.py` produit `docs/` (version web, GitHub Pages) et `www/` (contenu de l'appli).
 - Android : projet Capacitor dans `android/`. Chaque push sur `main` compile l'APK (GitHub Actions) et le publie dans **Releases**.
 - La clé `android/app/groupride-sideload.jks` est volontairement publique : elle sert seulement à ce que chaque nouvelle version s'installe par-dessus la précédente.
+- Manuel : `manuel/build_manual.py` (captures dans `manuel/img/`) produit `manuel/manuel-group-ride.pdf`, copié dans `docs/` par `build.py`.
 - Mode simulation (Réglages) pour tester sans bouger. Pour les tests automatiques, `localStorage['grr.testbroker']` peut désigner un relais local (`ws://localhost:8883`).
 
 Greg Meyer, STAPS Avignon.
