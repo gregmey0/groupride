@@ -74,14 +74,14 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
   publishSession(){if(this.isOrg&&this.session)this.pub('s',this.sessionMsg())},
   publishRoute(r){if(this.isOrg)this.pub('route/'+r.id,encRoute(r))},
   publishOwn(){this.pub('r/'+this.pid,this.own?encRoute(this.own):null)},
-  publishMsgs(){if(this.myMsgs.length)this.pub('m/'+this.pid,{pid:this.pid,name:this.name,msgs:this.myMsgs.slice(-60)})},
+  publishMsgs(){if(this.myMsgs.length)this.pub('m/'+this.pid,{pid:this.pid,name:this.name,msgs:this.myMsgs.slice(-40)})},
   stateMsg(){
     const f=GPS.last,s=this.stats,now=Date.now(),h=currentHeading(),fr=this.followRoute(),pr=this.prog;
     return{v:1,pid:this.pid,name:this.name,status:this.status,org:this.isOrg?1:0,start:this.start,
       pos:f?{lat:+f.lat.toFixed(6),lon:+f.lon.toFixed(6),acc:Math.round(f.acc),alt:f.alt!=null?Math.round(f.alt):null,spd:f.speed!=null?+f.speed.toFixed(1):null,hd:h!=null?Math.round(h):null,t:f.t,sim:f.sim?1:undefined}:null,
       s:{dist:Math.round(s.dist),mov:Math.round(s.mov),vmax:+(s.vmax||0).toFixed(1),gain:Math.round(s.gain||0),loss:Math.round(s.loss||0)},
       f:this.follow&&fr?{k:this.follow.k,id:this.follow.k==='org'?this.follow.id:null,name:fr.name,L:Math.round(fr.L)}:null,
-      pr:pr&&fr&&pr.rid===fr.id?{a:Math.round(pr.along),L:Math.round(pr.L),off:Math.round(pr.off),gl:pr.gainLeft!=null?Math.round(pr.gainLeft):null}:null,
+      pr:pr&&fr&&pr.rid===fr.id?{a:Math.round(pr.along),L:Math.round(pr.L),off:Math.round(pr.off),gl:pr.gainLeft!=null?Math.round(pr.gainLeft):null,w:pr.wait?1:undefined}:null,
       sos:this.sos&&now-this.sos<SOS_MS?this.sos:null,bat:Battery.level,app:NATIVE?'android':'web',upd:now};
   },
   publish(force){
@@ -110,7 +110,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
       const prev=R.st;R.st=o;
       if(o.pos&&o.status==='on'){const tr=R.trail,l=tr[tr.length-1];if(!l||l[2]!==o.pos.t){tr.push([o.pos.lat,o.pos.lon,o.pos.t,o.pos.alt]);if(tr.length>3000)tr.splice(0,500)}}
       const live=Date.now()-this.syncT>8000;
-      if(!prev&&live&&o.status==='on')this.sysMsg(`${o.name} a rejoint la sortie`);
+      if(!prev&&live&&o.status==='on')this.sysMsg(`${o.name} a rejoint la sortie`,Math.min(Date.now(),o.start||Date.now()));
       if(prev&&prev.status==='on'&&o.status==='left')this.sysMsg(`${o.name} a quitté la sortie`);
       if((o.sos||null)!==((prev&&prev.sos)||null)){this.renderHead();this.dirtyView(true)}
       this.dirtyView();return}
@@ -176,9 +176,10 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     const r=this.followRoute();if(!r){this.prog=null;return}
     if(!f||f.acc>50)return;
     const loc=routeLocate(r,f,this.prog&&this.prog.rid===r.id?this.prog.along:null);if(!loc)return;
-    this.prog={rid:r.id,along:loc.along,L:r.L,off:loc.off,gainLeft:loc.gainLeft,ele:loc.ele};
     const lim=settings.offDist||50;
     if(loc.off<=lim)this.armed=true;
+    /* tant qu'on n'est jamais passé sur le tracé (trajet d'approche), pas d'avancement ni d'alerte */
+    this.prog={rid:r.id,along:this.armed?loc.along:0,L:r.L,off:loc.off,gainLeft:this.armed?loc.gainLeft:r.gain,ele:loc.ele,wait:!this.armed};
     if(loc.off>lim){if(!this.offSince)this.offSince=Date.now();
       if(settings.offAlert&&this.armed&&!this.offAlerted&&Date.now()-this.offSince>=8000){this.offAlerted=true;Snd.warn();vib([400,150,400]);toast('⚠ Hors tracé : '+fmtDist(loc.off),true)}}
     else if(loc.off<lim*0.7){if(this.offAlerted){Snd.ok();toast('✔ De retour sur le tracé')}this.offSince=null;this.offAlerted=false}
@@ -198,7 +199,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     if(this.tab==='chat'&&document.visibilityState==='visible')this.lastRead=Date.now();
     Chat.render();this.renderHead();this.save();
   },
-  sysMsg(text){this.addMsg({id:'sys-'+uid(),t:Date.now(),sys:true,text},true)},
+  sysMsg(text,t){this.addMsg({id:'sys-'+uid(),t:t||Date.now(),sys:true,text},true)},
   notify(m){
     const sos=m.k==='sos';
     if(document.visibilityState==='hidden'&&NATIVE&&settings.notif){
@@ -213,7 +214,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     if(q){m.k=q.k;if(q.pos&&f)m.pos={lat:+f.lat.toFixed(5),lon:+f.lon.toFixed(5)}}
     if(q&&q.k==='sos')this.sos=Date.now();
     if(q&&q.k==='ok')this.sos=null;
-    this.myMsgs.push(m);if(this.myMsgs.length>60)this.myMsgs.shift();
+    this.myMsgs.push(m);if(this.myMsgs.length>40)this.myMsgs.shift();
     this.addMsg(m,true);this.publishMsgs();this.publish(true);
     return true;
   },

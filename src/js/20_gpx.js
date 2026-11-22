@@ -29,7 +29,10 @@ function simplifyPts(pts,tol){
 function makeRoute({id,name,pts,owner,raw}){
   pts=pts.map(p=>[+(+p[0]).toFixed(6),+(+p[1]).toFixed(6),p[2]==null?null:Math.round(p[2])]);
   if(!raw){let tol=2,s=simplifyPts(pts,tol);while(s.length>3000){tol*=1.6;s=simplifyPts(pts,tol)}pts=s}
-  return routeStats({id:id||uid(),name:name||'Tracé',pts,owner:owner||null});
+  const r=routeStats({id:id||uid(),name:name||'Tracé',pts,owner:owner||null});
+  /* le relais le plus strict refuse les messages de plus de 100 Ko : on garde de la marge */
+  if(!raw){let tol=4;while(JSON.stringify(encRoute(r)).length>50000&&tol<200){r.pts=simplifyPts(pts,tol);routeStats(r);tol*=1.5}}
+  return r;
 }
 function routeStats(r){
   const p=r.pts,cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+dist(p[i-1],p[i]));

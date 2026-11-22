@@ -51,7 +51,7 @@ const Join={link:null,stream:null,own:null,
     if(this.link){this.link.close();this.link=null}
     let link=null;try{link=await SessionLink.connect(code)}catch(e){}
     if(current!=='join'){if(link)link.close();return}
-    if(!link){$('#jInfo').innerHTML='<p class="warnbox">Sortie introuvable : vérifie le code et la connexion internet.</p>';return}
+    if(!link){$('#jInfo').innerHTML='<p class="warnbox">Sortie introuvable ou déjà terminée : vérifie le code et la connexion internet.</p>';return}
     const s=link.session;
     if(s.status!=='open'){link.close();$('#jInfo').innerHTML='<p class="warnbox">Cette sortie est terminée.</p>';return}
     this.link=link;

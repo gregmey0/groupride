@@ -64,7 +64,8 @@ const RideMap={map:null,follow:true,mk:{},pl:{},me:null,myPl:null,routesDirty:tr
   },
   chips(){
     const s=Ride.stats,pr=Ride.prog,fr=Ride.followRoute();let h=`<span class="chip">${fmtKm(s.dist)} km · ${kmh(s.spd)} km/h · moy ${kmh(s.mov>0?s.dist/(s.mov/1000):null)}</span>`;
-    if(fr&&pr&&pr.rid===fr.id){const off=pr.off>(settings.offDist||50);
+    if(fr&&pr&&pr.rid===fr.id&&pr.wait)h+=`<span class="chip route">🧭 ${esc(fr.name)} : tracé à ${fmtDist(pr.off)}, rejoins-le</span>`;
+    else if(fr&&pr&&pr.rid===fr.id){const off=pr.off>(settings.offDist||50);
       h+=`<span class="chip route${off?' off':''}">🧭 ${fmtKm(pr.along)} / ${fmtKm(fr.L)} km${fr.gain!=null&&pr.gainLeft!=null?' · D+ restant '+Math.round(pr.gainLeft)+' m':''}${off?` · ⚠ hors tracé ${fmtDist(pr.off)}`:''}</span>`}
     else if(fr)h+=`<span class="chip route">🧭 ${esc(fr.name)} : en attente du GPS…</span>`;
     else if(Ride.follow)h+=`<span class="chip route">🧭 Tracé en cours de chargement…</span>`;
@@ -125,6 +126,7 @@ const RiderInfo={
 function progressLine(st,long){
   if(!st.f)return'';const pr=st.pr;
   if(!pr)return`<p class="prog">🧭 ${esc(st.f.name)}${long?' : position sur le tracé inconnue':''}</p>`;
+  if(pr.w)return`<p class="prog">🧭 ${esc(st.f.name)} : pas encore sur le tracé (à ${fmtDist(pr.off)})</p>`;
   const pct=pr.L?Math.min(100,Math.round(pr.a/pr.L*100)):0,off=pr.off>80;
   return`<p class="prog${off?' off':''}">🧭 ${esc(st.f.name)} : <b>${fmtKm(pr.a)} / ${fmtKm(pr.L)} km</b> (${pct} %)${long&&pr.gl!=null?' · D+ restant '+pr.gl+' m':''}${off?' · ⚠ hors tracé ('+fmtDist(pr.off)+')':''}</p>${long?`<div class="pbar"><i style="width:${pct}%"></i></div>`:''}`;
 }

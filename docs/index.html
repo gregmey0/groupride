@@ -3328,7 +3328,7 @@ var qrcode = function() {
 </script>
 <script>'use strict';
 (function(){
-const VERSION='1.0.0';
+const VERSION='1.0.1';
 const CAP=window.capacitorExports||null;
 const NATIVE=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform());
 const P=NATIVE&&CAP?{geo:CAP.registerPlugin('BackgroundGeolocation'),fs:CAP.registerPlugin('Filesystem'),share:CAP.registerPlugin('Share'),awake:CAP.registerPlugin('KeepAwake'),notif:CAP.registerPlugin('LocalNotifications'),app:CAP.registerPlugin('App')}:{};
@@ -3595,7 +3595,10 @@ function simplifyPts(pts,tol){
 function makeRoute({id,name,pts,owner,raw}){
   pts=pts.map(p=>[+(+p[0]).toFixed(6),+(+p[1]).toFixed(6),p[2]==null?null:Math.round(p[2])]);
   if(!raw){let tol=2,s=simplifyPts(pts,tol);while(s.length>3000){tol*=1.6;s=simplifyPts(pts,tol)}pts=s}
-  return routeStats({id:id||uid(),name:name||'Tracé',pts,owner:owner||null});
+  const r=routeStats({id:id||uid(),name:name||'Tracé',pts,owner:owner||null});
+  /* le relais le plus strict refuse les messages de plus de 100 Ko : on garde de la marge */
+  if(!raw){let tol=4;while(JSON.stringify(encRoute(r)).length>50000&&tol<200){r.pts=simplifyPts(pts,tol);routeStats(r);tol*=1.5}}
+  return r;
 }
 function routeStats(r){
   const p=r.pts,cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+dist(p[i-1],p[i]));
@@ -3942,14 +3945,14 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
   publishSession(){if(this.isOrg&&this.session)this.pub('s',this.sessionMsg())},
   publishRoute(r){if(this.isOrg)this.pub('route/'+r.id,encRoute(r))},
   publishOwn(){this.pub('r/'+this.pid,this.own?encRoute(this.own):null)},
-  publishMsgs(){if(this.myMsgs.length)this.pub('m/'+this.pid,{pid:this.pid,name:this.name,msgs:this.myMsgs.slice(-60)})},
+  publishMsgs(){if(this.myMsgs.length)this.pub('m/'+this.pid,{pid:this.pid,name:this.name,msgs:this.myMsgs.slice(-40)})},
   stateMsg(){
     const f=GPS.last,s=this.stats,now=Date.now(),h=currentHeading(),fr=this.followRoute(),pr=this.prog;
     return{v:1,pid:this.pid,name:this.name,status:this.status,org:this.isOrg?1:0,start:this.start,
       pos:f?{lat:+f.lat.toFixed(6),lon:+f.lon.toFixed(6),acc:Math.round(f.acc),alt:f.alt!=null?Math.round(f.alt):null,spd:f.speed!=null?+f.speed.toFixed(1):null,hd:h!=null?Math.round(h):null,t:f.t,sim:f.sim?1:undefined}:null,
       s:{dist:Math.round(s.dist),mov:Math.round(s.mov),vmax:+(s.vmax||0).toFixed(1),gain:Math.round(s.gain||0),loss:Math.round(s.loss||0)},
       f:this.follow&&fr?{k:this.follow.k,id:this.follow.k==='org'?this.follow.id:null,name:fr.name,L:Math.round(fr.L)}:null,
-      pr:pr&&fr&&pr.rid===fr.id?{a:Math.round(pr.along),L:Math.round(pr.L),off:Math.round(pr.off),gl:pr.gainLeft!=null?Math.round(pr.gainLeft):null}:null,
+      pr:pr&&fr&&pr.rid===fr.id?{a:Math.round(pr.along),L:Math.round(pr.L),off:Math.round(pr.off),gl:pr.gainLeft!=null?Math.round(pr.gainLeft):null,w:pr.wait?1:undefined}:null,
       sos:this.sos&&now-this.sos<SOS_MS?this.sos:null,bat:Battery.level,app:NATIVE?'android':'web',upd:now};
   },
   publish(force){
@@ -3978,7 +3981,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
       const prev=R.st;R.st=o;
       if(o.pos&&o.status==='on'){const tr=R.trail,l=tr[tr.length-1];if(!l||l[2]!==o.pos.t){tr.push([o.pos.lat,o.pos.lon,o.pos.t,o.pos.alt]);if(tr.length>3000)tr.splice(0,500)}}
       const live=Date.now()-this.syncT>8000;
-      if(!prev&&live&&o.status==='on')this.sysMsg(`${o.name} a rejoint la sortie`);
+      if(!prev&&live&&o.status==='on')this.sysMsg(`${o.name} a rejoint la sortie`,Math.min(Date.now(),o.start||Date.now()));
       if(prev&&prev.status==='on'&&o.status==='left')this.sysMsg(`${o.name} a quitté la sortie`);
       if((o.sos||null)!==((prev&&prev.sos)||null)){this.renderHead();this.dirtyView(true)}
       this.dirtyView();return}
@@ -4044,9 +4047,10 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     const r=this.followRoute();if(!r){this.prog=null;return}
     if(!f||f.acc>50)return;
     const loc=routeLocate(r,f,this.prog&&this.prog.rid===r.id?this.prog.along:null);if(!loc)return;
-    this.prog={rid:r.id,along:loc.along,L:r.L,off:loc.off,gainLeft:loc.gainLeft,ele:loc.ele};
     const lim=settings.offDist||50;
     if(loc.off<=lim)this.armed=true;
+    /* tant qu'on n'est jamais passé sur le tracé (trajet d'approche), pas d'avancement ni d'alerte */
+    this.prog={rid:r.id,along:this.armed?loc.along:0,L:r.L,off:loc.off,gainLeft:this.armed?loc.gainLeft:r.gain,ele:loc.ele,wait:!this.armed};
     if(loc.off>lim){if(!this.offSince)this.offSince=Date.now();
       if(settings.offAlert&&this.armed&&!this.offAlerted&&Date.now()-this.offSince>=8000){this.offAlerted=true;Snd.warn();vib([400,150,400]);toast('⚠ Hors tracé : '+fmtDist(loc.off),true)}}
     else if(loc.off<lim*0.7){if(this.offAlerted){Snd.ok();toast('✔ De retour sur le tracé')}this.offSince=null;this.offAlerted=false}
@@ -4066,7 +4070,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     if(this.tab==='chat'&&document.visibilityState==='visible')this.lastRead=Date.now();
     Chat.render();this.renderHead();this.save();
   },
-  sysMsg(text){this.addMsg({id:'sys-'+uid(),t:Date.now(),sys:true,text},true)},
+  sysMsg(text,t){this.addMsg({id:'sys-'+uid(),t:t||Date.now(),sys:true,text},true)},
   notify(m){
     const sos=m.k==='sos';
     if(document.visibilityState==='hidden'&&NATIVE&&settings.notif){
@@ -4081,7 +4085,7 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     if(q){m.k=q.k;if(q.pos&&f)m.pos={lat:+f.lat.toFixed(5),lon:+f.lon.toFixed(5)}}
     if(q&&q.k==='sos')this.sos=Date.now();
     if(q&&q.k==='ok')this.sos=null;
-    this.myMsgs.push(m);if(this.myMsgs.length>60)this.myMsgs.shift();
+    this.myMsgs.push(m);if(this.myMsgs.length>40)this.myMsgs.shift();
     this.addMsg(m,true);this.publishMsgs();this.publish(true);
     return true;
   },
@@ -4237,7 +4241,8 @@ const RideMap={map:null,follow:true,mk:{},pl:{},me:null,myPl:null,routesDirty:tr
   },
   chips(){
     const s=Ride.stats,pr=Ride.prog,fr=Ride.followRoute();let h=`<span class="chip">${fmtKm(s.dist)} km · ${kmh(s.spd)} km/h · moy ${kmh(s.mov>0?s.dist/(s.mov/1000):null)}</span>`;
-    if(fr&&pr&&pr.rid===fr.id){const off=pr.off>(settings.offDist||50);
+    if(fr&&pr&&pr.rid===fr.id&&pr.wait)h+=`<span class="chip route">🧭 ${esc(fr.name)} : tracé à ${fmtDist(pr.off)}, rejoins-le</span>`;
+    else if(fr&&pr&&pr.rid===fr.id){const off=pr.off>(settings.offDist||50);
       h+=`<span class="chip route${off?' off':''}">🧭 ${fmtKm(pr.along)} / ${fmtKm(fr.L)} km${fr.gain!=null&&pr.gainLeft!=null?' · D+ restant '+Math.round(pr.gainLeft)+' m':''}${off?` · ⚠ hors tracé ${fmtDist(pr.off)}`:''}</span>`}
     else if(fr)h+=`<span class="chip route">🧭 ${esc(fr.name)} : en attente du GPS…</span>`;
     else if(Ride.follow)h+=`<span class="chip route">🧭 Tracé en cours de chargement…</span>`;
@@ -4298,6 +4303,7 @@ const RiderInfo={
 function progressLine(st,long){
   if(!st.f)return'';const pr=st.pr;
   if(!pr)return`<p class="prog">🧭 ${esc(st.f.name)}${long?' : position sur le tracé inconnue':''}</p>`;
+  if(pr.w)return`<p class="prog">🧭 ${esc(st.f.name)} : pas encore sur le tracé (à ${fmtDist(pr.off)})</p>`;
   const pct=pr.L?Math.min(100,Math.round(pr.a/pr.L*100)):0,off=pr.off>80;
   return`<p class="prog${off?' off':''}">🧭 ${esc(st.f.name)} : <b>${fmtKm(pr.a)} / ${fmtKm(pr.L)} km</b> (${pct} %)${long&&pr.gl!=null?' · D+ restant '+pr.gl+' m':''}${off?' · ⚠ hors tracé ('+fmtDist(pr.off)+')':''}</p>${long?`<div class="pbar"><i style="width:${pct}%"></i></div>`:''}`;
 }
@@ -4315,9 +4321,9 @@ const Stats={
     </div><p class="hint">Altitude et dénivelé viennent du GPS du téléphone : ce sont des estimations (± 10 à 20 m).</p></section>`;
     const fr=Ride.followRoute(),pr=Ride.prog;
     if(fr){
-      const ok=pr&&pr.rid===fr.id,pct=ok&&fr.L?Math.min(100,Math.round(pr.along/fr.L*100)):0;
+      const ok=pr&&pr.rid===fr.id&&!pr.wait,pct=ok&&fr.L?Math.min(100,Math.round(pr.along/fr.L*100)):0;
       h+=`<section class="card"><h2>🧭 ${esc(fr.name)}</h2>
-        <p><b>${ok?fmtKm(pr.along):'—'} / ${fmtKm(fr.L)} km</b>${ok?` · ${pct} % · reste ${fmtKm(Math.max(0,fr.L-pr.along))} km`:' · en attente du GPS'}</p>
+        <p><b>${ok?fmtKm(pr.along):'—'} / ${fmtKm(fr.L)} km</b>${ok?` · ${pct} % · reste ${fmtKm(Math.max(0,fr.L-pr.along))} km`:pr&&pr.wait?` · tracé à ${fmtDist(pr.off)} : rejoins-le pour démarrer`:' · en attente du GPS'}</p>
         ${fr.gain!=null?`<p class="hint">D+ total ${fr.gain} m${ok&&pr.gainLeft!=null?` · D+ restant ${Math.round(pr.gainLeft)} m`:''}</p>`:''}
         ${ok&&pr.off>(settings.offDist||50)?`<p class="warnbox">⚠ Hors tracé : ${fmtDist(pr.off)}</p>`:''}
         <div class="pbar"><i style="width:${pct}%"></i></div>${this.profile(fr)}</section>`;
@@ -4336,11 +4342,11 @@ const Stats={
     d+=` L${W},${Y(p[p.length-1][2]??mn).toFixed(1)} L${W},${H-bot} Z`;
     const at=a=>{let i=0;while(i<r.cum.length-2&&r.cum[i+1]<a)i++;return p[i][2]??mn};
     const dots=[];
-    Ride.others().forEach(R=>{const st=R.st;if(st.status!=='on'||!st.pr||!st.f)return;
+    Ride.others().forEach(R=>{const st=R.st;if(st.status!=='on'||!st.pr||!st.f||st.pr.w)return;
       const same=st.f.k==='org'&&Ride.follow&&Ride.follow.k==='org'&&st.f.id===Ride.follow.id;if(!same)return;
       dots.push(`<g><circle cx="${X(st.pr.a).toFixed(1)}" cy="${Y(at(st.pr.a)).toFixed(1)}" r="7" fill="${colorOf(R.pid)}" stroke="#fff" stroke-width="2"/><title>${esc(st.name)}</title></g>`)});
     const pr=Ride.prog;
-    if(pr&&pr.rid===r.id)dots.push(`<circle cx="${X(pr.along).toFixed(1)}" cy="${Y(at(pr.along)).toFixed(1)}" r="9" fill="#00E5FF" stroke="#000" stroke-width="3"/>`);
+    if(pr&&pr.rid===r.id&&!pr.wait)dots.push(`<circle cx="${X(pr.along).toFixed(1)}" cy="${Y(at(pr.along)).toFixed(1)}" r="9" fill="#00E5FF" stroke="#000" stroke-width="3"/>`);
     return`<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Profil du tracé : de ${Math.round(mn)} à ${Math.round(mx)} m d'altitude">
       <path d="${d}" fill="rgba(163,230,53,.25)" stroke="#A3E635" stroke-width="2.5"/>
       <text x="4" y="${top+10}" class="pt">${Math.round(mx)} m</text><text x="4" y="${H-bot-4}" class="pt">${Math.round(mn)} m</text>
@@ -4356,7 +4362,7 @@ const Stats={
       const st=R.st,ss=st.s||{},left=st.status==='left',age=st.pos?now-st.pos.t:null,sos=st.sos&&now-st.sos<SOS_MS;
       let rel='';
       if(!left&&st.pos&&me)rel='à '+fmtDist(dist(me,st.pos));
-      if(!left&&myId&&st.f&&st.f.k==='org'&&st.f.id===myId&&st.pr&&mine&&mine.rid===myId){const dd=st.pr.a-mine.along;rel=Math.abs(dd)<100?'avec toi':(dd>0?fmtDist(dd)+' devant':fmtDist(-dd)+' derrière')+' sur le tracé'}
+      if(!left&&myId&&st.f&&st.f.k==='org'&&st.f.id===myId&&st.pr&&!st.pr.w&&mine&&mine.rid===myId&&!mine.wait){const dd=st.pr.a-mine.along;rel=Math.abs(dd)<100?'avec toi':(dd>0?fmtDist(dd)+' devant':fmtDist(-dd)+' derrière')+' sur le tracé'}
       rows.push(`<li class="${left?'left':''}${sos?' sos':''}"><button type="button" data-rider="${R.pid}">
         <span class="dot" style="background:${colorOf(R.pid)}">${esc(initials(st.name))}</span>
         <span class="gn"><b>${esc(st.name)}${st.org?' <span class="tag">orga</span>':''}${sos?' 🆘':''}</b>
@@ -4554,7 +4560,7 @@ const Join={link:null,stream:null,own:null,
     if(this.link){this.link.close();this.link=null}
     let link=null;try{link=await SessionLink.connect(code)}catch(e){}
     if(current!=='join'){if(link)link.close();return}
-    if(!link){$('#jInfo').innerHTML='<p class="warnbox">Sortie introuvable : vérifie le code et la connexion internet.</p>';return}
+    if(!link){$('#jInfo').innerHTML='<p class="warnbox">Sortie introuvable ou déjà terminée : vérifie le code et la connexion internet.</p>';return}
     const s=link.session;
     if(s.status!=='open'){link.close();$('#jInfo').innerHTML='<p class="warnbox">Cette sortie est terminée.</p>';return}
     this.link=link;
