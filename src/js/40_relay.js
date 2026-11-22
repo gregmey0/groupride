@@ -5,7 +5,8 @@
 const BROKERS={'1':'wss://broker.hivemq.com:8884/mqtt','2':'wss://broker.emqx.io:8084/mqtt'};
 (()=>{const t=store.get('grr.testbroker',null);if(t)BROKERS['9']=t})();
 const WEB_URL='https://gregmey0.github.io/groupride/';
-const APP={name:'Group Ride',scheme:'groupride',pkg:'org.groupride.app',apk:'https://github.com/gregmey0/groupride/releases/latest/download/GroupRide.apk'};
+/* testflight : lien public d'invitation TestFlight, à renseigner quand il existe */
+const APP={name:'Group Ride',scheme:'groupride',pkg:'org.groupride.app',apk:'https://github.com/gregmey0/groupride/releases/latest/download/GroupRide.apk',testflight:''};
 function appIntent(code){const fb=location.origin+location.pathname+'?noapp=1#join-'+code;
   return`intent://join-${code}#Intent;scheme=${APP.scheme};package=${APP.pkg};S.browser_fallback_url=${encodeURIComponent(fb)};end`}
 function newCode(b){let s=b;while(s.length<12){const r=crypto.getRandomValues(new Uint8Array(16));for(const x of r)if(x<250&&s.length<12)s+=String(x%10)}return s}

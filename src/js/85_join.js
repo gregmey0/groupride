@@ -39,9 +39,11 @@ const Join={link:null,stream:null,own:null,
   },
   /* page web sur Android : proposer d'ouvrir l'application (partage téléphone verrouillé) */
   appBtn(code){
-    const c=normCode(code||''),noapp=/[?&]noapp=1/.test(location.search),ok=!NATIVE&&ANDROID&&validCode(c);
-    $('#jApp').hidden=!ok||noapp;$('#jAppNo').hidden=!ok||!noapp;
+    const c=normCode(code||''),noapp=/[?&]noapp=1/.test(location.search),ok=!NATIVE&&ANDROID&&validCode(c),ios=!NATIVE&&IOS&&validCode(c);
+    $('#jApp').hidden=!(ok&&!noapp)&&!ios;$('#jAppNo').hidden=!ok||!noapp;
+    $('#jApp').innerHTML=ios?'📱 J\'ai l\'appli iPhone : l\'ouvrir<small>sinon, continue ici dans Safari, écran allumé</small>':'📱 Ouvrir dans l\'application';
     if(ok)$('#jApp').onclick=()=>{location.href=appIntent(c)};
+    if(ios)$('#jApp').onclick=()=>{location.href=APP.scheme+'://join-'+c};
   },
   leave(){this.stopScan();if(this.link){this.link.close();this.link=null}},
   async lookup(){

@@ -64,5 +64,17 @@ if __name__ == "__main__":
         ic = big.resize((s, s), Image.LANCZOS)
         canvas.paste(ic, ((w - s) // 2, (h - s) // 2), ic)
         canvas.save(f)
+    # iPhone : icône 1024 sans transparence, écrans de démarrage 2732 x 2732
+    IOS = ROOT / "ios/App/App/Assets.xcassets"
+    if IOS.exists():
+        render(tmp / "web.svg", tmp / "ios.png", 1024)
+        Image.open(tmp / "ios.png").convert("RGB").save(IOS / "AppIcon.appiconset/AppIcon-512@2x.png")
+        for f in (IOS / "Splash.imageset").glob("*.png"):
+            w, h = Image.open(f).size
+            s = int(min(w, h) * 0.22)
+            canvas = Image.new("RGB", (w, h), (11, 13, 11))
+            ic = big.resize((s, s), Image.LANCZOS)
+            canvas.paste(ic, ((w - s) // 2, (h - s) // 2), ic)
+            canvas.save(f)
     shutil.rmtree(tmp)
     print("icônes générées")

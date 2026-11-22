@@ -59,6 +59,8 @@ html = f"""<!DOCTYPE html>
 (DIST / "index.html").write_text(html)
 for f in ("icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"):
     shutil.copy(SRC / "icons" / f, DIST / f)
+# politique de confidentialité (demandée par Apple pour TestFlight et l'App Store)
+shutil.copy(SRC / "confidentialite.html", DIST / "confidentialite.html")
 # manuel d'utilisation (PDF, généré par manuel/build_manual.py)
 if (ROOT / "manuel/manuel-group-ride.pdf").exists():
     shutil.copy(ROOT / "manuel/manuel-group-ride.pdf", DIST / "manuel-group-ride.pdf")

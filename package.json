@@ -1,6 +1,6 @@
 {
   "name": "groupride",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "Group Ride – sorties VTT en groupe : positions en direct, stats, tracés GPX, messagerie (web + Android)",
   "scripts": {
@@ -13,6 +13,7 @@
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.6.2",
     "@capacitor/filesystem": "8.1.5",
+    "@capacitor/ios": "^8.6.2",
     "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/share": "8.0.3",
     "@fontsource/atkinson-hyperlegible": "5.2.6",

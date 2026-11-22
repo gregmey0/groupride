@@ -39,7 +39,8 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     this.m.onMessage((t,pl)=>this.onMsg(t,pl));
     ['/p/+','/t/+/+','/r/+','/m/+','/route/+'].forEach(t=>this.m.subscribe(this.base+t));
     if(!this.ready)setTimeout(()=>{if(this.on&&!this.ready){this.ready=true;this.publishAll()}},5000);
-    GPS.start();this.unsub=GPS.on(f=>this.onFix(f));Wake.on();
+    /* navigateur : l'écran doit rester allumé ; application : le partage continue écran éteint, on laisse le téléphone se verrouiller */
+    GPS.start();this.unsub=GPS.on(f=>this.onFix(f));if(!NATIVE)Wake.on();
     this.tickI=setInterval(()=>this.tick(),1000);
     RideMap.reset();show('ride');this.setTab('map');
     if(this.link.session&&!this.isOrg)this.onSession(this.link.session);

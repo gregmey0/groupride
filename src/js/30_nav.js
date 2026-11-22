@@ -36,14 +36,15 @@ const Home={deferred:null,
     const w=[];
     if(!NATIVE&&!window.isSecureContext)w.push('Le GPS ne fonctionne que si l\'appli est ouverte en <b>https</b>.');
     $('#homeWarn').innerHTML=w.map(x=>`<div class="warnbox">${x}</div>`).join('')+(IOS&&!STANDALONE&&!NATIVE?`<div class="ioshint">📲 Sur iPhone : touche <span class="shr">Partager ⬆︎</span> en bas de Safari, puis « Sur l'écran d'accueil ». Group Ride s'ouvrira ensuite comme une appli, en plein écran.</div>`:'')
-      +(ANDROID&&!NATIVE?`<div class="apkhint">🤖 Sur Android, l'<a href="${APP.apk}">application</a> continue à partager ta position téléphone verrouillé.</div>`:'');
+      +(ANDROID&&!NATIVE?`<div class="apkhint">🤖 Sur Android, l'<a href="${APP.apk}">application</a> continue à partager ta position téléphone verrouillé.</div>`:'')
+      +(IOS&&!NATIVE&&APP.testflight?`<div class="apkhint">🍏 Sur iPhone, l'<a href="${APP.testflight}">application (TestFlight)</a> continue à partager ta position téléphone verrouillé.</div>`:'');
     let h='';
     const act=store.get(K.active,null);if(act)h+=`<button class="primary big" id="hResume">⏯ Revenir à la sortie<small>${esc(act.sname||'')}</small></button>`;
     const last=store.get(K.last,null);if(last&&!act)h+=`<button type="button" id="hLast">📊 Dernière sortie<small>${esc(last.name)} · ${new Date(last.start).toLocaleDateString('fr-FR')} · ${fmtDist(last.stats.dist)}</small></button>`;
     $('#homeExtra').innerHTML=h;
     const r=$('#hResume');if(r)r.onclick=()=>Ride.resume();
     const l=$('#hLast');if(l)l.onclick=()=>Summary.open(store.get(K.last,null));
-    $('#hVersion').textContent='Version '+VERSION+(NATIVE?' · application Android':'')+' · Greg Meyer, STAPS Avignon';
+    $('#hVersion').textContent='Version '+VERSION+(NATIVE?(IOS?' · application iPhone':' · application Android'):'')+' · Greg Meyer, STAPS Avignon';
   }
 };
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();Home.deferred=e;$('#hInstall').hidden=false});

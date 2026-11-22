@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Group Ride – Confidentialité</title>
+<style>
+body{margin:0;background:#0b0d0b;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:17px;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:1.5rem 1.2rem 3rem}
+h1{color:#A3E635;font-size:1.8rem;margin:.5rem 0 1rem}
+h2{color:#A3E635;font-size:1.15rem;margin:1.6rem 0 .5rem}
+a{color:#A3E635}
+li{margin:.3rem 0}
+.small{color:#b9c0b9;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Group Ride – Confidentialité</h1>
+<p>Group Ride permet à un groupe de cyclistes de voir la position de chacun pendant une sortie. Cette page explique quelles données circulent, où, et pour combien de temps.</p>
+
+<h2>Aucun compte, aucune publicité, aucun pistage</h2>
+<ul>
+  <li>Pas d'inscription : tu indiques seulement un prénom (ou un pseudo).</li>
+  <li>Pas de publicité, pas de statistiques d'usage, pas de revente de données. L'appli n'utilise aucun service de mesure d'audience.</li>
+</ul>
+
+<h2>Données partagées pendant une sortie</h2>
+<p>Seulement quand tu as rejoint une sortie, et jusqu'à ce que tu la quittes :</p>
+<ul>
+  <li>ton prénom ;</li>
+  <li>ta position GPS, ta trace parcourue et tes statistiques (distance, vitesse, dénivelé) ;</li>
+  <li>le tracé GPX que tu choisis de partager, le cas échéant ;</li>
+  <li>tes messages dans la messagerie de la sortie ;</li>
+  <li>le niveau de batterie du téléphone, quand le système le fournit.</li>
+</ul>
+<p>Ces données sont visibles uniquement par les participants de la même sortie, c'est-à-dire les personnes qui ont son code.</p>
+
+<h2>Comment elles circulent</h2>
+<p>Les échanges passent par un relais MQTT public (HiveMQ, à défaut EMQX). Tout est <b>chiffré de bout en bout</b> (AES-GCM) avec une clé tirée du code de la sortie : le relais ne voit que des données illisibles, et personne sans le code ne peut les lire.</p>
+
+<h2>Durée de conservation</h2>
+<ul>
+  <li>Sur le relais : jusqu'à la fin de la sortie. Quand l'organisateur la termine, positions, traces et messages sont effacés du relais.</li>
+  <li>Sur ton téléphone : le bilan et la trace de ta dernière sortie, pour que tu puisses les exporter en GPX. Désinstaller l'appli ou effacer les données du site les supprime.</li>
+</ul>
+
+<h2>Autorisations demandées</h2>
+<ul>
+  <li><b>Localisation</b> : pour partager ta position avec le groupe pendant la sortie, y compris téléphone verrouillé dans l'application. Elle n'est utilisée que pendant une sortie.</li>
+  <li><b>Notifications</b> : pour t'avertir des messages du groupe et des alertes « Besoin d'aide ».</li>
+  <li><b>Mouvement / boussole</b> (facultatif) : pour orienter ta flèche sur la carte à l'arrêt.</li>
+</ul>
+
+<h2>Fonds de carte</h2>
+<p>Les fonds de carte sont chargés depuis leurs fournisseurs (IGN Géoplateforme, OpenStreetMap, OpenTopoMap, CyclOSM). Comme pour tout site de cartographie, ces services reçoivent les demandes de tuiles de la zone affichée.</p>
+
+<h2>Contact</h2>
+<p>Group Ride est développé par Greg Meyer (STAPS, Avignon Université). Questions ou demandes : <a href="https://github.com/gregmey0/groupride/issues">github.com/gregmey0/groupride/issues</a>.</p>
+<p class="small">Dernière mise à jour : novembre 2026.</p>
+</main>
+</body>
+</html>

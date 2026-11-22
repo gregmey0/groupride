@@ -994,12 +994,12 @@ button.hold{touch-action:none;-webkit-touch-callout:none;background:linear-gradi
     </ul>
     <h2>Téléphone verrouillé</h2>
     <ul>
-      <li><b>Appli Android</b> : le partage continue téléphone verrouillé, et les messages arrivent en notification.</li>
+      <li><b>Application Android ou iPhone</b> : le partage continue téléphone verrouillé, et les messages arrivent en notification.</li>
       <li><b>Navigateur (iPhone compris)</b> : garde l'écran allumé, le verrouiller coupe le partage.</li>
       <li>En zone blanche, tout repart dès le retour du réseau. La trace complète est renvoyée.</li>
     </ul>
     <h2>Confidentialité</h2>
-    <p>Positions, traces et messages passent par un relais public (HiveMQ, à défaut EMQX). Ils sont chiffrés de bout en bout avec une clé tirée du code de la sortie : sans le code, rien n'est lisible. Quand l'organisateur termine la sortie, les données sont effacées du relais.</p>
+    <p>Positions, traces et messages passent par un relais public (HiveMQ, à défaut EMQX). Ils sont chiffrés de bout en bout avec une clé tirée du code de la sortie : sans le code, rien n'est lisible. Quand l'organisateur termine la sortie, les données sont effacées du relais. <a href="https://gregmey0.github.io/groupride/confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>.</p>
     <h2>Fin de sortie</h2>
     <p>☰ Menu › <b>Quitter la sortie</b>, ou, pour l'organisateur, <b>Terminer la sortie pour tous</b>. Le bilan s'affiche et ta trace s'exporte en GPX (Strava, Komoot…).</p>
     <a class="btnlink" id="manualLink" href="https://gregmey0.github.io/groupride/manuel-group-ride.pdf" target="_blank" rel="noopener">📄 Manuel d'utilisation complet (PDF)</a>
@@ -3332,7 +3332,7 @@ var qrcode = function() {
 </script>
 <script>'use strict';
 (function(){
-const VERSION='1.0.2';
+const VERSION='1.0.3';
 const CAP=window.capacitorExports||null;
 const NATIVE=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform());
 const P=NATIVE&&CAP?{geo:CAP.registerPlugin('BackgroundGeolocation'),fs:CAP.registerPlugin('Filesystem'),share:CAP.registerPlugin('Share'),awake:CAP.registerPlugin('KeepAwake'),notif:CAP.registerPlugin('LocalNotifications'),app:CAP.registerPlugin('App')}:{};
@@ -3665,7 +3665,7 @@ function download(name,text,mime){
 async function nativeWrite(directory,path,text){const r=await P.fs.writeFile({path,data:text,directory,encoding:'utf8',recursive:true});return r.uri}
 async function saveFile(name,text,mime='application/gpx+xml'){
   if(!NATIVE){download(name,text,mime);toast('Fichier téléchargé : '+name);return}
-  try{await nativeWrite('DOCUMENTS','GroupRide/'+name,text);toast('Enregistré dans Documents › GroupRide : '+name)}
+  try{await nativeWrite('DOCUMENTS','GroupRide/'+name,text);toast(IOS?'Enregistré dans Fichiers › Sur mon iPhone › Group Ride : '+name:'Enregistré dans Documents › GroupRide : '+name)}
   catch(e){toast('Enregistrement impossible ici : utilise « Partager ».',true)}
 }
 async function shareFile(name,text,mime='application/gpx+xml'){
@@ -3725,14 +3725,15 @@ const Home={deferred:null,
     const w=[];
     if(!NATIVE&&!window.isSecureContext)w.push('Le GPS ne fonctionne que si l\'appli est ouverte en <b>https</b>.');
     $('#homeWarn').innerHTML=w.map(x=>`<div class="warnbox">${x}</div>`).join('')+(IOS&&!STANDALONE&&!NATIVE?`<div class="ioshint">📲 Sur iPhone : touche <span class="shr">Partager ⬆︎</span> en bas de Safari, puis « Sur l'écran d'accueil ». Group Ride s'ouvrira ensuite comme une appli, en plein écran.</div>`:'')
-      +(ANDROID&&!NATIVE?`<div class="apkhint">🤖 Sur Android, l'<a href="${APP.apk}">application</a> continue à partager ta position téléphone verrouillé.</div>`:'');
+      +(ANDROID&&!NATIVE?`<div class="apkhint">🤖 Sur Android, l'<a href="${APP.apk}">application</a> continue à partager ta position téléphone verrouillé.</div>`:'')
+      +(IOS&&!NATIVE&&APP.testflight?`<div class="apkhint">🍏 Sur iPhone, l'<a href="${APP.testflight}">application (TestFlight)</a> continue à partager ta position téléphone verrouillé.</div>`:'');
     let h='';
     const act=store.get(K.active,null);if(act)h+=`<button class="primary big" id="hResume">⏯ Revenir à la sortie<small>${esc(act.sname||'')}</small></button>`;
     const last=store.get(K.last,null);if(last&&!act)h+=`<button type="button" id="hLast">📊 Dernière sortie<small>${esc(last.name)} · ${new Date(last.start).toLocaleDateString('fr-FR')} · ${fmtDist(last.stats.dist)}</small></button>`;
     $('#homeExtra').innerHTML=h;
     const r=$('#hResume');if(r)r.onclick=()=>Ride.resume();
     const l=$('#hLast');if(l)l.onclick=()=>Summary.open(store.get(K.last,null));
-    $('#hVersion').textContent='Version '+VERSION+(NATIVE?' · application Android':'')+' · Greg Meyer, STAPS Avignon';
+    $('#hVersion').textContent='Version '+VERSION+(NATIVE?(IOS?' · application iPhone':' · application Android'):'')+' · Greg Meyer, STAPS Avignon';
   }
 };
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();Home.deferred=e;$('#hInstall').hidden=false});
@@ -3782,7 +3783,8 @@ function tile(label,val,unit,cls){return`<div class="tile ${cls||''}"><span>${la
 const BROKERS={'1':'wss://broker.hivemq.com:8884/mqtt','2':'wss://broker.emqx.io:8084/mqtt'};
 (()=>{const t=store.get('grr.testbroker',null);if(t)BROKERS['9']=t})();
 const WEB_URL='https://gregmey0.github.io/groupride/';
-const APP={name:'Group Ride',scheme:'groupride',pkg:'org.groupride.app',apk:'https://github.com/gregmey0/groupride/releases/latest/download/GroupRide.apk'};
+/* testflight : lien public d'invitation TestFlight, à renseigner quand il existe */
+const APP={name:'Group Ride',scheme:'groupride',pkg:'org.groupride.app',apk:'https://github.com/gregmey0/groupride/releases/latest/download/GroupRide.apk',testflight:''};
 function appIntent(code){const fb=location.origin+location.pathname+'?noapp=1#join-'+code;
   return`intent://join-${code}#Intent;scheme=${APP.scheme};package=${APP.pkg};S.browser_fallback_url=${encodeURIComponent(fb)};end`}
 function newCode(b){let s=b;while(s.length<12){const r=crypto.getRandomValues(new Uint8Array(16));for(const x of r)if(x<250&&s.length<12)s+=String(x%10)}return s}
@@ -3914,7 +3916,8 @@ const Ride={on:false,tab:'map',riders:{},routes:{},msgs:new Map(),
     this.m.onMessage((t,pl)=>this.onMsg(t,pl));
     ['/p/+','/t/+/+','/r/+','/m/+','/route/+'].forEach(t=>this.m.subscribe(this.base+t));
     if(!this.ready)setTimeout(()=>{if(this.on&&!this.ready){this.ready=true;this.publishAll()}},5000);
-    GPS.start();this.unsub=GPS.on(f=>this.onFix(f));Wake.on();
+    /* navigateur : l'écran doit rester allumé ; application : le partage continue écran éteint, on laisse le téléphone se verrouiller */
+    GPS.start();this.unsub=GPS.on(f=>this.onFix(f));if(!NATIVE)Wake.on();
     this.tickI=setInterval(()=>this.tick(),1000);
     RideMap.reset();show('ride');this.setTab('map');
     if(this.link.session&&!this.isOrg)this.onSession(this.link.session);
@@ -4552,9 +4555,11 @@ const Join={link:null,stream:null,own:null,
   },
   /* page web sur Android : proposer d'ouvrir l'application (partage téléphone verrouillé) */
   appBtn(code){
-    const c=normCode(code||''),noapp=/[?&]noapp=1/.test(location.search),ok=!NATIVE&&ANDROID&&validCode(c);
-    $('#jApp').hidden=!ok||noapp;$('#jAppNo').hidden=!ok||!noapp;
+    const c=normCode(code||''),noapp=/[?&]noapp=1/.test(location.search),ok=!NATIVE&&ANDROID&&validCode(c),ios=!NATIVE&&IOS&&validCode(c);
+    $('#jApp').hidden=!(ok&&!noapp)&&!ios;$('#jAppNo').hidden=!ok||!noapp;
+    $('#jApp').innerHTML=ios?'📱 J\'ai l\'appli iPhone : l\'ouvrir<small>sinon, continue ici dans Safari, écran allumé</small>':'📱 Ouvrir dans l\'application';
     if(ok)$('#jApp').onclick=()=>{location.href=appIntent(c)};
+    if(ios)$('#jApp').onclick=()=>{location.href=APP.scheme+'://join-'+c};
   },
   leave(){this.stopScan();if(this.link){this.link.close();this.link=null}},
   async lookup(){
@@ -4612,7 +4617,7 @@ try{history.replaceState({s:'home'},'')}catch(e){}
 if(!NATIVE&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
 const joinHash=()=>{const m=/^#join-([0-9-]+)/.exec(location.hash);if(!m)return null;try{history.replaceState({s:'home'},'',location.pathname+location.search)}catch(e){}return m[1]};
 window.addEventListener('hashchange',()=>{const c=joinHash();if(c)Join.open(c)});
-/* application Android ouverte par un lien groupride://join-CODE (bouton de la page web) */
+/* application (Android, iPhone) ouverte par un lien groupride://join-CODE (bouton de la page web) */
 const linkCode=u=>{const c=normCode(u||'');return validCode(c)?c:null};
 if(NATIVE&&P.app){try{P.app.addListener('appUrlOpen',e=>{const c=linkCode(e&&e.url);if(c)Join.open(c)})}catch(e){}}
 $('#compassBtn').onclick=async()=>{const ok=await Compass.enable();toast(ok?'Boussole activée':'Boussole refusée ou indisponible',!ok)};

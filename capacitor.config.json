@@ -16,5 +16,9 @@
       "smallIcon": "ic_stat_groupride",
       "iconColor": "#A3E635"
     }
+  },
+  "ios": {
+    "backgroundColor": "#0b0d0b",
+    "contentInset": "never"
   }
 }

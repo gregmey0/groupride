@@ -95,7 +95,7 @@ function download(name,text,mime){
 async function nativeWrite(directory,path,text){const r=await P.fs.writeFile({path,data:text,directory,encoding:'utf8',recursive:true});return r.uri}
 async function saveFile(name,text,mime='application/gpx+xml'){
   if(!NATIVE){download(name,text,mime);toast('Fichier téléchargé : '+name);return}
-  try{await nativeWrite('DOCUMENTS','GroupRide/'+name,text);toast('Enregistré dans Documents › GroupRide : '+name)}
+  try{await nativeWrite('DOCUMENTS','GroupRide/'+name,text);toast(IOS?'Enregistré dans Fichiers › Sur mon iPhone › Group Ride : '+name:'Enregistré dans Documents › GroupRide : '+name)}
   catch(e){toast('Enregistrement impossible ici : utilise « Partager ».',true)}
 }
 async function shareFile(name,text,mime='application/gpx+xml'){
