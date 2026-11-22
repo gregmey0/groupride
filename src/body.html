@@ -1,0 +1,169 @@
+<div id="simBanner" class="simbanner" hidden>MODE SIMULATION (position fictive)</div>
+
+<!-- ACCUEIL -->
+<section id="home" class="screen active">
+  <main class="home">
+    <div class="brand">
+      <img src="icon.svg" width="78" height="78" alt="" class="logo">
+      <div><h1 tabindex="-1">Group Ride</h1><p>Sorties VTT en groupe</p></div>
+    </div>
+    <div id="homeWarn"></div>
+    <div id="homeExtra"></div>
+    <button type="button" class="primary big" id="hCreate">➕ Créer une sortie<small>tu invites le groupe par lien, QR code ou code</small></button>
+    <button type="button" class="big" id="hJoin">🔗 Rejoindre une sortie<small>avec le lien, le QR code ou le code reçu</small></button>
+    <div class="row"><button type="button" id="hSettings">⚙ Réglages</button><button type="button" id="hHelp">❓ Aide</button></div>
+    <button type="button" id="hInstall" hidden>📲 Installer l'appli sur ce téléphone</button>
+    <p class="sign" id="hVersion"></p>
+  </main>
+</section>
+
+<!-- CRÉER -->
+<section id="create" class="screen">
+  <header class="bar"><button type="button" class="back" data-back aria-label="Retour">←</button><h1 tabindex="-1">Créer une sortie</h1></header>
+  <main>
+    <section class="card">
+      <label>Nom de la sortie<input type="text" id="cName" maxlength="80"></label>
+      <label>Ton prénom (visible par le groupe)<input type="text" id="cMe" autocomplete="given-name" maxlength="30" placeholder="Prénom"></label>
+    </section>
+    <section class="card">
+      <h2>Tracés proposés (facultatif)</h2>
+      <p class="hint">Les GPX des parcours prévus : chacun choisit celui qu'il suit. Tu pourras aussi en ajouter pendant la sortie.</p>
+      <ul id="cRoutes" class="rlist"></ul>
+      <button type="button" id="cAddGpx">📂 Ajouter des GPX</button>
+    </section>
+    <button type="button" class="primary big" id="cGo">📡 Créer la sortie</button>
+    <p class="hint">Tu deviens l'organisateur : tu invites le groupe, tu proposes les tracés et tu termines la sortie pour tous.</p>
+  </main>
+</section>
+
+<!-- REJOINDRE -->
+<section id="join" class="screen">
+  <header class="bar"><button type="button" class="back" data-back aria-label="Retour">←</button><h1 tabindex="-1">Rejoindre une sortie</h1></header>
+  <main>
+    <label>Code de la sortie (12 chiffres)
+      <input type="text" id="jCode" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="148 291 355 720" maxlength="24"></label>
+    <div class="row"><button type="button" class="primary" id="jLookup">🔎 Chercher</button><button type="button" id="jScan" hidden>📷 Scanner le QR</button></div>
+    <button type="button" class="ok big" id="jApp" hidden>📱 Ouvrir dans l'application</button>
+    <p class="hint" id="jAppNo" hidden>L'application n'est pas installée sur ce téléphone : tu peux continuer ici, dans le navigateur (écran allumé), ou <a href="https://github.com/gregmey0/groupride/releases/latest/download/GroupRide.apk">installer l'application</a>.</p>
+    <video id="jVideo" playsinline muted hidden></video>
+    <div id="jInfo"></div>
+    <div id="jConfirm" class="card" hidden>
+      <label>Ton prénom (visible par le groupe)<input type="text" id="jName" autocomplete="given-name" maxlength="30" placeholder="Prénom"></label>
+      <label>Tracé que tu suis<select id="jRoute"></select></label>
+      <p class="hint" id="jOwn"></p>
+      <button type="button" class="primary big" id="jGo">✔ Rejoindre la sortie</button>
+    </div>
+  </main>
+</section>
+
+<!-- SORTIE EN COURS -->
+<section id="ride" class="screen">
+  <header class="bar ridebar">
+    <h1 id="rTitle">Sortie</h1><span id="rCount" class="cnt">👥 1</span><span id="rGps" class="gps none">GPS…</span><span id="rNet" class="net" title="Relais">📡</span>
+  </header>
+  <div id="rSos" class="sosban" hidden></div>
+  <div class="panes">
+    <div id="pMap" class="pane active">
+      <div id="rMap"></div>
+      <div id="rChips" class="chips" aria-live="polite"></div>
+      <div class="mapbtns">
+        <button type="button" id="mMe" aria-label="Me suivre sur la carte" title="Me suivre">🎯</button>
+        <button type="button" id="mAll" aria-label="Voir tout le groupe" title="Tout le groupe">👥</button>
+        <button type="button" id="mTrail" aria-label="Positions seules ou positions et traces" title="Traces">〰</button>
+        <button type="button" id="mLayers" aria-label="Fond de carte et affichage" title="Fond de carte">🗂</button>
+        <button type="button" id="mRoutes" aria-label="Tracés GPX" title="Tracés">🧭</button>
+      </div>
+      <div id="rSimPad" class="simpad"></div>
+    </div>
+    <div id="pStats" class="pane scroll"><main id="statsBody"></main></div>
+    <div id="pChat" class="pane chat">
+      <ul id="chatList" class="chatlist" aria-live="polite"></ul>
+      <div id="chatQuick" class="quick"></div>
+      <form id="chatForm" class="chatform" autocomplete="off"><input type="text" id="chatIn" maxlength="500" placeholder="Message au groupe…" enterkeyhint="send" aria-label="Message au groupe"><button type="submit" class="primary" aria-label="Envoyer">➤</button></form>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button type="button" data-tab="map" aria-pressed="true">🗺<small>Carte</small></button>
+    <button type="button" data-tab="stats" aria-pressed="false">📊<small>Stats</small></button>
+    <button type="button" data-tab="chat" aria-pressed="false">💬<small>Messages</small><span id="rBadge" class="badge" hidden></span></button>
+    <button type="button" id="rMenu">☰<small>Menu</small></button>
+  </nav>
+</section>
+
+<!-- RÉGLAGES -->
+<section id="settings" class="screen">
+  <header class="bar"><button type="button" class="back" data-back aria-label="Retour">←</button><h1 tabindex="-1">Réglages</h1></header>
+  <main id="settingsBox">
+    <section class="card">
+      <h2>Carte</h2>
+      <label>Fond de carte<select id="setLayer" data-s="layer"></select></label>
+      <label class="chk"><input type="checkbox" data-s="showTrails"> Afficher les traces parcourues (sinon positions seules)</label>
+      <label class="chk"><input type="checkbox" data-s="showOthersRoutes"> Afficher les tracés GPX personnels des autres</label>
+      <button type="button" id="compassBtn" hidden>🧭 Autoriser la boussole (iPhone)</button>
+    </section>
+    <section class="card">
+      <h2>Tracé suivi</h2>
+      <label class="chk"><input type="checkbox" data-s="offAlert"> Alerte quand je m'écarte du tracé</label>
+      <label>Écart avant l'alerte<select data-s="offDist" data-num><option value="30">30 m</option><option value="50">50 m</option><option value="100">100 m</option><option value="200">200 m</option></select></label>
+    </section>
+    <section class="card">
+      <h2>Messages et alertes</h2>
+      <label class="chk"><input type="checkbox" data-s="msgSound"> Son à l'arrivée d'un message</label>
+      <label class="chk"><input type="checkbox" data-s="vibrate"> Vibrations</label>
+      <label class="chk native-only"><input type="checkbox" data-s="notif"> Notification des messages téléphone verrouillé</label>
+    </section>
+    <section class="card">
+      <h2>Essai</h2>
+      <label class="chk"><input type="checkbox" data-s="sim"> Mode simulation (position fictive, pour tester chez soi)</label>
+      <p class="hint">En simulation, des flèches sous la carte déplacent ta position ; « 🚴 Rouler » avance tout seul à 18 km/h.</p>
+    </section>
+  </main>
+</section>
+
+<!-- AIDE -->
+<section id="help" class="screen">
+  <header class="bar"><button type="button" class="back" data-back aria-label="Retour">←</button><h1 tabindex="-1">Aide</h1></header>
+  <main class="help">
+    <h2>Démarrer une sortie</h2>
+    <ol>
+      <li>L'organisateur choisit <b>Créer une sortie</b>, ajoute s'il veut les GPX des parcours, puis montre le <b>QR code</b> ou envoie le <b>lien</b> (WhatsApp, SMS…). Le code à 12 chiffres marche aussi.</li>
+      <li>Chacun scanne le QR code avec l'appareil photo, ouvre le lien, ou tape le code dans <b>Rejoindre une sortie</b>, indique son prénom et choisit le tracé qu'il suit.</li>
+    </ol>
+    <h2>Pendant la sortie</h2>
+    <ul>
+      <li><b>🗺 Carte</b> : tout le monde avec ses initiales. Toi, c'est la flèche bleue. 🎯 te suit, 👥 montre tout le groupe, 〰 bascule entre positions seules et positions + traces, 🗂 change le fond de carte (il reste mémorisé), 🧭 ouvre les tracés.</li>
+      <li><b>📊 Stats</b> : distance, vitesse, moyenne, temps en mouvement, dénivelé, et la même chose pour chacun. Sur un tracé commun, tu vois qui est devant ou derrière toi.</li>
+      <li><b>💬 Messages</b> : messagerie de groupe et messages rapides. « 📍 Ma position » envoie ta position. « 🆘 Besoin d'aide » alerte tout le monde et te met en rouge sur leur carte.</li>
+    </ul>
+    <h2>Tracés GPX</h2>
+    <ul>
+      <li>L'organisateur peut proposer un ou plusieurs tracés. Chacun choisit celui qu'il suit : il voit son avancement, le dénivelé restant, et reçoit une alerte s'il s'en écarte.</li>
+      <li>Chacun peut aussi importer son propre GPX : les autres le voient en pointillés à sa couleur, avec sa position dessus.</li>
+    </ul>
+    <h2>Téléphone verrouillé</h2>
+    <ul>
+      <li><b>Appli Android</b> : le partage continue téléphone verrouillé, et les messages arrivent en notification.</li>
+      <li><b>Navigateur (iPhone compris)</b> : garde l'écran allumé, le verrouiller coupe le partage.</li>
+      <li>En zone blanche, tout repart dès le retour du réseau. La trace complète est renvoyée.</li>
+    </ul>
+    <h2>Confidentialité</h2>
+    <p>Positions, traces et messages passent par un relais public (HiveMQ, à défaut EMQX). Ils sont chiffrés de bout en bout avec une clé tirée du code de la sortie : sans le code, rien n'est lisible. Quand l'organisateur termine la sortie, les données sont effacées du relais.</p>
+    <h2>Fin de sortie</h2>
+    <p>☰ Menu › <b>Quitter la sortie</b>, ou, pour l'organisateur, <b>Terminer la sortie pour tous</b>. Le bilan s'affiche et ta trace s'exporte en GPX (Strava, Komoot…).</p>
+  </main>
+</section>
+
+<div id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <header class="bar"><h1 id="sheetTitle" tabindex="-1"></h1><button type="button" class="primary sheetClose">✔ Fermer</button></header>
+  <main id="sheetBody"></main>
+</div>
+<div id="toast" role="status"></div>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="box">
+    <h2 id="modalTitle" tabindex="-1"></h2>
+    <div id="modalBody"></div>
+    <input type="text" id="modalInput" autocomplete="off">
+    <div id="modalBtns"></div>
+  </div>
+</div>
+<input type="file" id="gpxInput" hidden>

@@ -1,0 +1,20 @@
+{
+  "appId": "org.groupride.app",
+  "appName": "Group Ride",
+  "webDir": "www",
+  "android": {
+    "useLegacyBridge": true,
+    "backgroundColor": "#0b0d0b"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DARK",
+      "initialViewportFitValueHint": "cover"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_groupride",
+      "iconColor": "#A3E635"
+    }
+  }
+}

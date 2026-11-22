@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Group Ride</string>
+    <string name="title_activity_main">Group Ride</string>
+    <string name="package_name">org.groupride.app</string>
+    <string name="custom_url_scheme">org.groupride.app</string>
+    <string name="capacitor_background_geolocation_notification_channel_name">Partage de position</string>
+    <string name="capacitor_background_geolocation_notification_icon">drawable/ic_stat_groupride</string>
+    <string name="capacitor_background_geolocation_notification_color">#A3E635</string>
+</resources>

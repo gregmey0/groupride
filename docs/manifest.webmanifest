@@ -1,0 +1,31 @@
+{
+  "name": "Group Ride – sorties VTT en groupe",
+  "short_name": "Group Ride",
+  "description": "Positions du groupe en direct, statistiques, tracés GPX partagés et messagerie.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d0b",
+  "theme_color": "#0b0d0b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
